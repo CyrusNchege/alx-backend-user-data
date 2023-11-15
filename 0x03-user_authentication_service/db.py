@@ -9,7 +9,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.exc import NoResultFound
 from user import Base, User
-from typing import TypeVar
+from typing import TypeVar, Optional
 
 VALID_FIELDS = ['id', 'email', 'hashed_password', 'session_id', 'reset_token']
 
@@ -47,26 +47,12 @@ class DB:
         session.commit()
         return user
 
-    def find_user_by(self, **kwargs) -> User:
-        """
-        Finds a User in the Database.
-        """
-        if not kwargs or any(x not in VALID_FIELDS for x in kwargs):
+    def find_user_by(self, **kwargs) -> Optional[User]:
+        """Find a user in the database."""
+        if not kwargs or any(field not in VALID_FIELDS for field in kwargs):
             raise InvalidRequestError
-        session = self._session
-        try:
-            return session.query(User).filter_by(**kwargs).one()
-        except Exception:
-            raise NoResultFound
 
-    def update_user(self, user_id: int, **kwargs) -> None:
-        """
-        updating a user in the database
-        """
-        session = self._session
-        user = self.find_user_by(id=user_id)
-        for k, v in kwargs.items():
-            if k not in VALID_FIELDS:
-                raise ValueError
-            setattr(user, k, v)
-        session.commit()
+        try:
+            return self._session.query(User).filter_by(**kwargs).one()
+        except NoResultFound:
+            return None
