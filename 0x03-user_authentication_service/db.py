@@ -47,12 +47,14 @@ class DB:
         session.commit()
         return user
 
-    def find_user_by(self, **kwargs) -> Optional[User]:
-        """Find a user in the database."""
-        if not kwargs or any(field not in VALID_FIELDS for field in kwargs):
+    def find_user_by(self, **kwargs) -> User:
+        """
+        Finds a User in the Database.
+        """
+        if not kwargs or any(x not in VALID_FIELDS for x in kwargs):
             raise InvalidRequestError
-
+        session = self._session
         try:
-            return self._session.query(User).filter_by(**kwargs).one()
-        except NoResultFound:
-            return None
+            return session.query(User).filter_by(**kwargs).one()
+        except Exception:
+            raise NoResultFound
